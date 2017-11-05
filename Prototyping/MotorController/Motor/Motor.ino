@@ -32,9 +32,9 @@ void setup()
         pinMode(dir1PinA,OUTPUT);
         pinMode(dir2PinA,OUTPUT);
         pinMode(speedPinA,OUTPUT);
-        pinMode(dir1PinB,OUTPUT);
-        pinMode(dir2PinB,OUTPUT);
-        pinMode(speedPinB,OUTPUT);
+        //pinMode(dir1PinB,OUTPUT);
+        //pinMode(dir2PinB,OUTPUT);
+        //pinMode(speedPinB,OUTPUT);
 }
 
 int ReadSerialInt()
@@ -59,6 +59,7 @@ void loop()
     if (Serial.available() > 0) 
     {
         int speed = ReadSerialInt();
+        //int speed = 255;
        
         analogWrite(speedPinA, speed);
         digitalWrite(dir1PinA, LOW);
