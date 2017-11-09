@@ -12,7 +12,7 @@ buzzer::Song mySong(0, kBuzzerPin);
 void setup() 
 {
     Serial.begin(9600);
-    buzzer::Valkyries(mySong);
+    buzzer::MaryHadALittleLamb(mySong);
 }
 
 bool ran = false;
