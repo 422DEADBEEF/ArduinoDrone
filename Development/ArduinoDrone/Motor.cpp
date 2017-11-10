@@ -36,13 +36,16 @@ Motor::Motor(DigitalPin dir1A, DigitalPin dir2A, PwmPin speedPinA,
     pinMode(speedPinB, OUTPUT);
 
     initialized = true;
+
+    SetMotorADirection(directionA);
+    SetMotorBDirection(directionB);
 }
 
 void Motor::SetMotorADirection(Motor::Directions direction)
 {
     if (!initialized)
     {
-        Diagnostics.ErrorMessage("Cannot set MotorA Direction: Motor not initialized.");
+        Diagnostics::ErrorMessage("Cannot set MotorA Direction: Motor not initialized.");
         return;
     }
 
@@ -53,7 +56,7 @@ void Motor::SetMotorADirection(Motor::Directions direction)
         digitalWrite(dir2PinA, HIGH);
         break;
 
-    case Motor::Directions::Clockwise:
+    case Motor::Directions::Counterclockwise:
         digitalWrite(dir1PinA, HIGH);
         digitalWrite(dir2PinA, LOW);
         break;
@@ -66,22 +69,22 @@ void Motor::SetMotorADirection(Motor::Directions direction)
     }
 }
 
-void Motor::SetMotorASpeed(Motor::Directions direction)
+void Motor::SetMotorASpeed(MotorSpeed speed)
 {
     if (!initialized)
     {
-        Diagnostics.ErrorMessage("Cannot set MotorA Speed: Motor not initialized.");
+        Diagnostics::ErrorMessage("Cannot set MotorA Speed: Motor not initialized.");
         return;
     }
 
     analogWrite(speedPinA, speed);
 }
 
-void Motor::SetMotorBDirection(MotorSpeed speed)
+void Motor::SetMotorBDirection(Motor::Directions direction)
 {
     if (!initialized)
     {
-        Diagnostics.ErrorMessage("Cannot set MotorB Direction: Motor not initialized.");
+        Diagnostics::ErrorMessage("Cannot set MotorB Direction: Motor not initialized.");
         return;
     }
 
@@ -92,7 +95,7 @@ void Motor::SetMotorBDirection(MotorSpeed speed)
         digitalWrite(dir2PinB, HIGH);
         break;
 
-    case Motor::Directions::Clockwise:
+    case Motor::Directions::Counterclockwise:
         digitalWrite(dir1PinB, HIGH);
         digitalWrite(dir2PinB, LOW);
         break;
@@ -109,7 +112,7 @@ void Motor::SetMotorBSpeed(MotorSpeed speed)
 {
     if (!initialized)
     {
-        Diagnostics.ErrorMessage("Cannot set MotorB Speed: Motor not initialized.");
+        Diagnostics::ErrorMessage("Cannot set MotorB Speed: Motor not initialized.");
         return;
     }
 

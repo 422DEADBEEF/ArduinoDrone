@@ -11,7 +11,7 @@ struct POST_FLAGS
     bool right_motor;
     bool imu;
     bool ultrasonic;
-}
+};
 
 class Diagnostics
 {

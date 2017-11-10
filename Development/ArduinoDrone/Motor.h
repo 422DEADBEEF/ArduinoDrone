@@ -1,5 +1,4 @@
 /******************************************************************************
-*   File:           Motor.h
 *   Class:          Motor
 *
 *   Description:    A controller class for an Arduino Qunqi L298N DC Stepper 
@@ -19,11 +18,12 @@
 #define MOTOR_H
 
 #include "Util.h"
+#include "Diagnostics.h"
 
 class Motor
 {
 public:
-    enum class Directions
+    enum Directions
     {
         None, Clockwise, Counterclockwise
     };
@@ -34,9 +34,9 @@ public:
           Motor::Directions directionA, Motor::Directions directionB);
     
     void SetMotorADirection(Motor::Directions direction);
-    void SetMotorASpeed(Motor::Directions direction);
+    void SetMotorASpeed(MotorSpeed speed);
 
-    void SetMotorBDirection(MotorSpeed speed);
+    void SetMotorBDirection(Motor::Directions direction);
     void SetMotorBSpeed(MotorSpeed speed);
 
 private:

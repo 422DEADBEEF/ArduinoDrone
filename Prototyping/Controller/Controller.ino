@@ -1,6 +1,7 @@
 #include <SoftwareSerial.h>
+
 SoftwareSerial BTserial(10, 11); // RX | TX
-// Connect the Bluetooth TX to the Arduino RX on pin 10. 
+// Connect the Bluetooth TX to the Arduino RX on pin 10.
 // Connect the Bluetooth RX to the Arduino TX on pin 11.
 
 enum ButtonPins{
