@@ -35,7 +35,7 @@ void setup()
         Motor::Directions::Clockwise, Motor::Directions::Clockwise);
     
     // In1, In2, EnA, In3, In4, EnB
-    right_motor = Motor(31, 32, 7, 35, 36, 6,
+    right_motor = Motor(32, 33, 7, 36, 37, 6,
         Motor::Directions::Counterclockwise, Motor::Directions::Counterclockwise);
 
     // TODO: Do something if POST fails
