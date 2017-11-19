@@ -58,4 +58,6 @@ void loop() {
 
   BTserial.write(state);
 
+  delay(100);
+
 }
