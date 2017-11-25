@@ -4,9 +4,6 @@
 
 const int kBuzzerPin = 9;
 
-unsigned long program_start_time;
-unsigned long previous_time;
-
 buzzer::Song mySong(0, kBuzzerPin);
 
 void setup() 
