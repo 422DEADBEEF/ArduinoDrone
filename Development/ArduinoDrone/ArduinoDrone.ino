@@ -83,8 +83,11 @@ void loop()
     }
     else
     {
-        right = false;
-        navigator.StopRight();
+        if (right)
+        {
+            right = false;
+            navigator.StopRight();
+        }
     }
 
     if (receiver.IsDown(Buttons::LeftButton))
@@ -97,8 +100,11 @@ void loop()
     }
     else
     {
-        left = false;
-        navigator.StopLeft();
+        if (left)
+        {
+            left = false;
+            navigator.StopLeft();
+        }
     }
 
     if (receiver.IsDown(Buttons::ForwardButton))
@@ -111,8 +117,12 @@ void loop()
     }
     else
     {
-        forward = false;
-        navigator.StopForward();
+        if (forward)
+        {
+            forward = false;
+            navigator.StopForward();
+    
+        }
     }
 
     if (receiver.IsDown(Buttons::BackButton))
@@ -125,8 +135,11 @@ void loop()
     }
     else
     {
-        back = false;
-        navigator.StopBack();
+        if (back)
+        {
+            back = false;
+            navigator.StopBack();
+        }
     }
 
 }
