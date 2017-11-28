@@ -1,12 +1,14 @@
 #ifndef IMU_H
 #define IMU_H
 
+#define CALIBRATION_THRESHOLD 0.01
+
 class IMU
 {
 public:
     IMU();
 
-    void Initialize(); // Blocks until system is calibrated
+    bool Initialize(); // Blocks until system is calibrated
     void Update();
 
     float GetYaw();

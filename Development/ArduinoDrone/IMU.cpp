@@ -1,8 +1,10 @@
 #include "IMU.h"
+#include "Diagnostics.h"
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 #include "Wire.h"
+
 
 namespace {
     MPU6050 mpu;
@@ -22,10 +24,12 @@ IMU::IMU() : yaw(0), pitch(0), roll(0)
 {
 }
 
-void IMU::Initialize()
+bool IMU::Initialize()
 {
     Wire.begin();
     mpu.initialize();
+
+    data_is_current = false;
 
     if (!mpu.testConnection())
     {
@@ -46,9 +50,12 @@ void IMU::Initialize()
     else
     {
         //TODO: Diagnostics error
+        Diagnostics::SetLED(0, 0, 255);
+        return false;
     }
 
     Calibrate();
+    return true;
 }
 
 void IMU::Update()
@@ -79,11 +86,19 @@ void IMU::Update()
 void IMU::Calibrate()
 {
     
-
+    bool on = false;
     bool calibrated = false;
     while (!calibrated)
     {
-        Serial.println("Calibrating IMU offsets...");
+        if (on)
+        {
+            Diagnostics::SetLED(0, 0, 0);
+        }
+        else
+        {
+            Diagnostics::SetLED(255, 0, 0);
+        }
+        on = !on;
 
         float mean_yaw = 0;
         float mean_pitch = 0;
@@ -107,12 +122,11 @@ void IMU::Calibrate()
 
         
 
-        if (abs(mean_yaw) < 0.0001 && abs(mean_pitch) < 0.0001 && abs(mean_roll) < 0.0001)
+        if (abs(mean_yaw) < CALIBRATION_THRESHOLD && abs(mean_pitch) < CALIBRATION_THRESHOLD && abs(mean_roll) < CALIBRATION_THRESHOLD)
         {
             calibrated = true;
         }
     }
-    Serial.println("IMU offsets calibrated.");
     yaw_offset = yaw;
     pitch_offset = pitch;
     roll_offset = roll;

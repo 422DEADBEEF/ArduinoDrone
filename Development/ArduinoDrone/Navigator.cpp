@@ -1,4 +1,5 @@
 #include "Navigator.h"
+#include "Diagnostics.h"
 
 
 Navigator::Navigator() : pitch_offset(0), roll_offset(0), ne_speed(0), nw_speed(0), 
@@ -14,17 +15,27 @@ void Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
     se_pin = se;
     sw_pin = sw;
 
-    imu.Initialize();
+    
 
-    pinMode(ne_pin, OUTPUT);
-    pinMode(nw_pin, OUTPUT);
-    pinMode(se_pin, OUTPUT);
-    pinMode(sw_pin, OUTPUT);
+    Diagnostics::SetLED(255, 0, 0);
+    if (imu.Initialize())
+    {
+        pinMode(ne_pin, OUTPUT);
+        pinMode(nw_pin, OUTPUT);
+        pinMode(se_pin, OUTPUT);
+        pinMode(sw_pin, OUTPUT);
+        Diagnostics::SetLED(0, 255, 0);
+    }
+
+    taking_off = false;
+    landing = false;
 }
 
 void Navigator::Update()
 {
     imu.Update();
+
+    //Serial.println(sonar.GetDistance());
 
     float pitch = imu.GetPitch();
     float roll = imu.GetRoll();
@@ -99,10 +110,10 @@ void Navigator::Update()
             }
         }
 
-        analogWrite(ne_pin, ne_speed + base_speed);
-        analogWrite(nw_pin, nw_speed + base_speed);
-        analogWrite(se_pin, se_speed + base_speed);
-        analogWrite(sw_pin, sw_speed + base_speed);
+        analogWrite(ne_pin, ((ne_speed + base_speed) <= 255) ? ne_speed + base_speed : 255);
+        analogWrite(nw_pin, ((nw_speed + base_speed) <= 255) ? nw_speed + base_speed : 255);
+        analogWrite(se_pin, ((se_speed + base_speed) <= 255) ? se_speed + base_speed : 255);
+        analogWrite(sw_pin, ((sw_speed + base_speed) <= 255) ? sw_speed + base_speed : 255);
     }
 }
 
@@ -140,7 +151,7 @@ void Navigator::Descend()
             base_speed = 0;
         }
 
-        if (base_speed = 0)
+        if (base_speed == 0)
         {
             ne_speed = 0;
             nw_speed = 0;
@@ -153,6 +164,25 @@ void Navigator::Descend()
         analogWrite(se_pin, (se_speed + base_speed > 0) ? se_speed + base_speed : 0);
         analogWrite(sw_pin, (sw_speed + base_speed > 0) ? sw_speed + base_speed : 0);
     }
+}
+
+void Navigator::LiftOff()
+{
+    base_speed = 255;
+}
+
+void Navigator::EmergencyShutdown()
+{
+    ne_speed = 0;
+    nw_speed = 0;
+    se_speed = 0;
+    sw_speed = 0;
+    base_speed = 0;
+
+    analogWrite(ne_pin, ne_speed + base_speed);
+    analogWrite(nw_pin, nw_speed + base_speed);
+    analogWrite(se_pin, se_speed + base_speed);
+    analogWrite(sw_pin, sw_speed + base_speed);
 }
 
 void Navigator::GoForward()

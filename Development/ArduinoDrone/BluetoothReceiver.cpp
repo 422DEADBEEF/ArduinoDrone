@@ -11,7 +11,7 @@ void BluetoothReceiver::Initialize()
 
 void BluetoothReceiver::Update()
 {
-    state = 0;
+    //state = 0;
     if (BTserial.available())
     {
         state = BTserial.read();

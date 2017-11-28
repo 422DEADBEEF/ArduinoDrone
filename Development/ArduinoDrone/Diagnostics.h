@@ -3,6 +3,12 @@
 
 #include "Util.h"
 
+namespace {
+    DigitalPin red;
+    DigitalPin blue;
+    DigitalPin green;
+}
+
 // TODO: Redesign this as a packed bit-field to reduce memory footprint
 struct POST_FLAGS
 {
@@ -16,6 +22,25 @@ struct POST_FLAGS
 class Diagnostics
 {
 public:
+
+
+    static void Initialize(DigitalPin Red, DigitalPin Green, DigitalPin Blue)
+    {
+        red = Red;
+        blue = Blue;
+        green = Green;
+
+        pinMode(RED_PIN, OUTPUT);
+        pinMode(GREEN_PIN, OUTPUT);
+        pinMode(BLUE_PIN, OUTPUT);
+    }
+
+    static void SetLED(uint8_t r, uint8_t g, uint8_t b)
+    {
+        digitalWrite(RED_PIN, r);
+        digitalWrite(GREEN_PIN, g);
+        digitalWrite(BLUE_PIN, b);
+    }
 
     static bool post()
     {

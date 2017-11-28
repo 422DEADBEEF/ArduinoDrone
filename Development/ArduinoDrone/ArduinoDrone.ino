@@ -17,38 +17,42 @@
 //#include "SongDefinitions.h"
 #include "Navigator.h"
 
-#define NE_MOTOR_PIN 9
-#define NW_MOTOR_PIN 6
-#define SE_MOTOR_PIN 5
-#define SW_MOTOR_PIN 13
+namespace 
+{
+    BluetoothReceiver receiver;
+    Navigator navigator;
+    Sonar sonar;
 
-namespace {
-BluetoothReceiver receiver;
-Navigator navigator;
-
-bool left;
-bool right;
-bool up;
-bool down;
+    bool left = false;
+    bool right = false;
+    bool up = false;
+    bool down = false;
+    bool forward = false;
+    bool back = false;
 }
 
 
 void setup() 
 {
     // Remote drone has no Serial connection
-    // Serial.begin(9600);
-
+    Serial.begin(9600);
+    Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN);
+    
     receiver.Initialize();
     navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
+    //sonar.Initialize();
+
 }
 
 void loop()
 {
     receiver.Update();
     navigator.Update();
-
+    //sonar.Update();
+    
     if (receiver.IsDown(Buttons::UpButton))
     {
+        Serial.println("Ascend!");
         if (!up)
         {
             up = true;
@@ -62,6 +66,7 @@ void loop()
 
     if (receiver.IsDown(Buttons::DownButton))
     {
+        Serial.println("Descend!");
         if (!down)
         {
             down = true;
@@ -75,6 +80,7 @@ void loop()
 
     if (receiver.IsDown(Buttons::RightButton))
     {
+        Serial.println("Right!");
         if (!right)
         {
             right = true;
@@ -92,6 +98,7 @@ void loop()
 
     if (receiver.IsDown(Buttons::LeftButton))
     {
+        Serial.println("Left!");
         if (!left)
         {
             left = true;
@@ -109,6 +116,7 @@ void loop()
 
     if (receiver.IsDown(Buttons::ForwardButton))
     {
+        Serial.println("Forward!");
         if (!forward)
         {
             forward = true;
@@ -125,8 +133,9 @@ void loop()
         }
     }
 
-    if (receiver.IsDown(Buttons::BackButton))
+    if (receiver.IsDown(Buttons::BackwardButton))
     {
+        Serial.println("Back!");
         if (!back)
         {
             back = true;
@@ -142,4 +151,15 @@ void loop()
         }
     }
 
+    if (receiver.IsDown(Buttons::OnOffButton))
+    {
+        Diagnostics::SetLED(255, 0, 0);
+        navigator.EmergencyShutdown();
+    }
+
+    if (receiver.IsDown(Buttons::SecretButton))
+    {
+        Diagnostics::SetLED(0, 255, 0);
+        navigator.LiftOff();
+    }
 }

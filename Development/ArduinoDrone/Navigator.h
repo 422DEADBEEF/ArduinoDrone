@@ -2,9 +2,9 @@
 #define NAVIGATOR_H
 
 #include "IMU.h"
-#include "Util.h"
+#include "Sonar.h"
 
-#define ASCENSION_RATE 8
+#define ASCENSION_RATE 16
 #define STABILIZER_THRESHOLD 1
 #define MOVEMENT_ANGLE 15
 #define HOVER_SPEED 200
@@ -32,6 +32,10 @@ public:
     void StopLeft();
     void StopRight();
 
+    void EmergencyShutdown();
+
+    void LiftOff();
+
 private:
     IMU imu;
 
@@ -54,6 +58,9 @@ private:
     bool backward;
     bool left;
     bool right;
+
+    bool taking_off;
+    bool landing;
 };
 
 #endif
