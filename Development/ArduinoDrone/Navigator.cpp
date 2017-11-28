@@ -15,8 +15,6 @@ void Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
     se_pin = se;
     sw_pin = sw;
 
-    
-
     Diagnostics::SetLED(255, 0, 0);
     if (imu.Initialize())
     {
@@ -27,20 +25,20 @@ void Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
         Diagnostics::SetLED(0, 255, 0);
     }
 
-    taking_off = false;
-    landing = false;
+    sonar.Initialize();
+    state = kLanded;
+    kHoverSpeed = 200;
 }
 
 void Navigator::Update()
 {
     imu.Update();
-
-    //Serial.println(sonar.GetDistance());
+    sonar.Update();
 
     float pitch = imu.GetPitch();
     float roll = imu.GetRoll();
 
-    if (base_speed > 0)
+    if (state != kLanded)
     {
         float roll_angle = roll - roll_offset;
 
@@ -49,7 +47,7 @@ void Navigator::Update()
             if (roll_angle > 0)
             {
                 // we are tilting too far forward
-                if (base_speed < HOVER_SPEED)
+                if (base_speed < kHoverSpeed)
                 {
                     ne_speed += SENSITIVITY;
                     nw_speed += SENSITIVITY;
@@ -63,7 +61,7 @@ void Navigator::Update()
             else if (roll_angle < 0)
             {
                 // we are tilting backward
-                if (base_speed < HOVER_SPEED)
+                if (base_speed < kHoverSpeed)
                 {
                     se_speed += SENSITIVITY;
                     sw_speed += SENSITIVITY;
@@ -83,7 +81,7 @@ void Navigator::Update()
             if (pitch_angle > 0)
             {
                 // we are tilting too far right
-                if (base_speed < HOVER_SPEED)
+                if (base_speed < kHoverSpeed)
                 {
                     ne_speed += SENSITIVITY;
                     se_speed += SENSITIVITY;
@@ -97,7 +95,7 @@ void Navigator::Update()
             else if (pitch_angle < 0)
             {
                 // we are tilting too far left
-                if (base_speed < HOVER_SPEED)
+                if (base_speed < kHoverSpeed)
                 {
                     nw_speed += SENSITIVITY;
                     sw_speed += SENSITIVITY;
@@ -106,6 +104,81 @@ void Navigator::Update()
                 {
                     ne_speed -= SENSITIVITY;
                     se_speed -= SENSITIVITY;
+                }
+            }
+        }
+
+        if (state == kTakingOff)
+        {
+            if (sonar.IsRising())
+            {
+                if (sonar.RisingRate() < DESIRED_RISING_RATE)
+                {
+                    base_speed += ASCENSION_RATE;
+                    if (base_speed > MAX_BASE_SPEED)
+                    {
+                        base_speed = MAX_BASE_SPEED;
+                    }
+                }
+
+                if (sonar.GetDistance() >= HOVER_HEIGHT)
+                {
+                    state = kStabilizing;
+                }
+            }
+            else
+            {
+                if (base_speed + ASCENSION_RATE >= MAX_BASE_SPEED)
+                {
+                    EmergencyShutdown();
+                    state = kLanded;
+                    Diagnostics::SetLED(0, 0, 255);
+                    return;
+                }
+
+                base_speed += ASCENSION_RATE;
+            }
+        }
+
+        if (state == kStabilizing)
+        {
+            Diagnostics::SetLED(200, 40, 220);
+            if (sonar.IsRising())
+            {
+                base_speed -= ASCENSION_RATE;
+            }
+            else if (sonar.IsFalling())
+            {
+                base_speed += ASCENSION_RATE;
+            }
+            else
+            {
+                if (abs(sonar.RisingRate()) < STABLE_CONSTANT)
+                {
+                    state = kFlying;
+                    kHoverSpeed = base_speed;
+                    Diagnostics::SetLED(0, 255, 0);
+                }
+            }
+        }
+
+        if (state == kLanding)
+        {
+            if (sonar.IsFalling())
+            {
+                if (sonar.GetDistance() < LANDING_THRESHOLD)
+                {
+                    state = kLanded;
+                    EmergencyShutdown();
+                    delay(2000);
+                    Diagnostics::SetLED(0, 255, 0);
+                }
+            }
+            else
+            {
+                if (base_speed - ASCENSION_RATE >= 0)
+                {
+                    base_speed -= ASCENSION_RATE;
                 }
             }
         }
@@ -168,7 +241,14 @@ void Navigator::Descend()
 
 void Navigator::LiftOff()
 {
-    base_speed = 255;
+    state = kTakingOff;
+    Diagnostics::SetLED(255, 140, 0);
+}
+
+void Navigator::Land()
+{
+    state = kLanding;
+    Diagnostics::SetLED(255, 140, 0);    
 }
 
 void Navigator::EmergencyShutdown()
@@ -187,48 +267,72 @@ void Navigator::EmergencyShutdown()
 
 void Navigator::GoForward()
 {
-    forward = true;
-    roll_offset += MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        forward = true;
+        roll_offset += MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::GoBack()
 {
-    backward = true;
-    roll_offset -= MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        backward = true;
+        roll_offset -= MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::GoLeft()
 {
-    left = true;
-    pitch_offset -= MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        left = true;
+        pitch_offset -= MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::GoRight()
 {
-    forward = true;
-    pitch_offset += MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        forward = true;
+        pitch_offset += MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::StopForward()
 {
-    forward = false;
-    roll_offset -= MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        forward = false;
+        roll_offset -= MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::StopBack()
 {
-    backward = true;
-    roll_offset += MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        backward = true;
+        roll_offset += MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::StopLeft()
 {
-    left = false;
-    pitch_offset += MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        left = false;
+        pitch_offset += MOVEMENT_ANGLE;
+    }
 }
 
 void Navigator::StopRight()
 {
-    forward = false;
-    pitch_offset -= MOVEMENT_ANGLE;
+    if (state == kFlying)
+    {
+        forward = false;
+        pitch_offset -= MOVEMENT_ANGLE;
+    }
 }

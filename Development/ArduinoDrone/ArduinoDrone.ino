@@ -153,13 +153,18 @@ void loop()
 
     if (receiver.IsDown(Buttons::OnOffButton))
     {
-        Diagnostics::SetLED(255, 0, 0);
         navigator.EmergencyShutdown();
     }
 
     if (receiver.IsDown(Buttons::SecretButton))
     {
-        Diagnostics::SetLED(0, 255, 0);
-        navigator.LiftOff();
+        if (navigator.state == kLanded)
+        {
+            navigator.LiftOff();
+        }
+        else
+        {
+            navigator.Land();
+        }
     }
 }

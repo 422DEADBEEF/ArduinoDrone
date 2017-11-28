@@ -4,12 +4,20 @@
 #include "IMU.h"
 #include "Sonar.h"
 
-#define ASCENSION_RATE 16
+#define ASCENSION_RATE 1
 #define STABILIZER_THRESHOLD 1
 #define MOVEMENT_ANGLE 15
-#define HOVER_SPEED 200
 #define SENSITIVITY 1
 #define MAX_BASE_SPEED 240
+#define DESIRED_RISING_RATE 5
+#define HOVER_HEIGHT 75
+#define STABLE_CONSTANT 10
+#define LANDING_THRESHOLD 10
+
+enum NavState
+{
+    kTakingOff, kLanding, kStabilizing, kFlying, kLanded
+};
 
 class Navigator
 {
@@ -35,11 +43,16 @@ public:
     void EmergencyShutdown();
 
     void LiftOff();
+    void Land();
+
+    NavState state;
 
 private:
     IMU imu;
+    Sonar sonar;
 
     MotorSpeed base_speed;
+    MotorSpeed kHoverSpeed;
 
     PwmPin nw_pin;
     PwmPin ne_pin;
@@ -58,9 +71,6 @@ private:
     bool backward;
     bool left;
     bool right;
-
-    bool taking_off;
-    bool landing;
 };
 
 #endif

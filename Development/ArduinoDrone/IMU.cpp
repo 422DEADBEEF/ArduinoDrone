@@ -29,8 +29,6 @@ bool IMU::Initialize()
     Wire.begin();
     mpu.initialize();
 
-    data_is_current = false;
-
     if (!mpu.testConnection())
     {
         //TODO: Diagnostics error
