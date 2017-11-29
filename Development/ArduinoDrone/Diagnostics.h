@@ -1,3 +1,15 @@
+/******************************************************************************
+*   File:           Diagnostics.h
+*
+*   Description:    Originally, this system was intended to provide an array
+*                   of features, including POST tests, LED controls, and 
+*                   Bluetooth back-communication. It currently provides LED
+*                   controls and nothing more.
+*
+*   Authors:        Team 0xDEADBEEF:
+*                   Ryan Berge and Jeremy DeHaan
+*
+******************************************************************************/
 #ifndef DIAGNOSTICS_H
 #define DIAGNOSTICS_H
 
@@ -9,7 +21,9 @@ namespace {
     DigitalPin green;
 }
 
+/*
 // TODO: Redesign this as a packed bit-field to reduce memory footprint
+// Also maybe use it, at all
 struct POST_FLAGS
 {
     bool bluetooth;
@@ -18,6 +32,7 @@ struct POST_FLAGS
     bool imu;
     bool ultrasonic;
 };
+*/
 
 class Diagnostics
 {
@@ -42,6 +57,7 @@ public:
         digitalWrite(BLUE_PIN, b);
     }
 
+    /*
     static bool post()
     {
         POST_FLAGS flags{ false, false, false, false, false };
@@ -59,6 +75,7 @@ public:
         }
     }
 
+    
     static void RunTest(POST_FLAGS& flags)
     {
         // TODO: Design POST tests and set flags
@@ -80,6 +97,7 @@ public:
         // TODO: Send message over bluetooth connection.
         //       Also possibly flash LEDs.
     }
+    */
 };
 
 #endif

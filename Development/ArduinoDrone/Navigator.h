@@ -1,3 +1,14 @@
+/******************************************************************************
+*   File:           Navigator.h
+*
+*   Description:    The navigator subsystem controls the speeds of the motors
+*                   based on user input, flight state 
+*
+*   Authors:        Team 0xDEADBEEF:
+*                   Ryan Berge and Jeremy DeHaan
+*
+******************************************************************************/
+
 #ifndef NAVIGATOR_H
 #define NAVIGATOR_H
 
@@ -5,14 +16,18 @@
 #include "Sonar.h"
 
 #define ASCENSION_RATE 1
+#define UP_DOWN_RATE 12
 #define STABILIZER_THRESHOLD 1
 #define MOVEMENT_ANGLE 15
 #define SENSITIVITY 1
-#define MAX_BASE_SPEED 240
+#define MAX_BASE_SPEED 200
 #define DESIRED_RISING_RATE 5
 #define HOVER_HEIGHT 75
 #define STABLE_CONSTANT 10
 #define LANDING_THRESHOLD 10
+
+#define NAVIGATION_CLOCK_DELAY 20
+#define TAKEOFF_CLOCK_DELAY 120
 
 enum NavState
 {
@@ -29,6 +44,8 @@ public:
 
     void Ascend();
     void Descend();
+    void StopAscend();
+    void StopDescend();
 
     void GoForward();
     void GoBack();

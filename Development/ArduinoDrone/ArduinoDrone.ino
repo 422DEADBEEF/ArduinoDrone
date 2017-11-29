@@ -9,19 +9,18 @@
 *                   Ryan Berge and Jeremy DeHaan
 *
 *   Date Created:   November 9th, 2017
-*   Last Modified:  November 24th, 2017
+*   Last Modified:  November 28th, 2017
 *
 ******************************************************************************/
 #include "Diagnostics.h"
 #include "BluetoothReceiver.h"
-//#include "SongDefinitions.h"
+//#include "SongDefinitions.h" // Buzzer subsystem uses a lot of memory
 #include "Navigator.h"
 
 namespace 
 {
     BluetoothReceiver receiver;
     Navigator navigator;
-    Sonar sonar;
 
     bool left = false;
     bool right = false;
@@ -29,6 +28,7 @@ namespace
     bool down = false;
     bool forward = false;
     bool back = false;
+    bool lift = false;
 }
 
 
@@ -36,25 +36,24 @@ void setup()
 {
     // Remote drone has no Serial connection
     Serial.begin(9600);
+    Serial.println("Initializing...");
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN);
     
     receiver.Initialize();
     navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
-    //sonar.Initialize();
-
+    Serial.println("Entering main loop...");
 }
 
 void loop()
 {
     receiver.Update();
     navigator.Update();
-    //sonar.Update();
     
     if (receiver.IsDown(Buttons::UpButton))
     {
-        Serial.println("Ascend!");
         if (!up)
         {
+            Serial.println("Ascend!");
             up = true;
             navigator.Ascend();
         }
@@ -66,9 +65,9 @@ void loop()
 
     if (receiver.IsDown(Buttons::DownButton))
     {
-        Serial.println("Descend!");
         if (!down)
         {
+            Serial.println("Descend!");
             down = true;
             navigator.Descend();
         }
@@ -80,9 +79,9 @@ void loop()
 
     if (receiver.IsDown(Buttons::RightButton))
     {
-        Serial.println("Right!");
         if (!right)
         {
+            Serial.println("Right!");
             right = true;
             navigator.GoRight();
         }
@@ -98,9 +97,9 @@ void loop()
 
     if (receiver.IsDown(Buttons::LeftButton))
     {
-        Serial.println("Left!");
         if (!left)
         {
+            Serial.println("Left!");
             left = true;
             navigator.GoLeft();
         }
@@ -116,9 +115,9 @@ void loop()
 
     if (receiver.IsDown(Buttons::ForwardButton))
     {
-        Serial.println("Forward!");
         if (!forward)
         {
+            Serial.println("Forward!");
             forward = true;
             navigator.GoForward();
         }
@@ -129,15 +128,14 @@ void loop()
         {
             forward = false;
             navigator.StopForward();
-    
         }
     }
 
     if (receiver.IsDown(Buttons::BackwardButton))
     {
-        Serial.println("Back!");
         if (!back)
         {
+            Serial.println("Back!");
             back = true;
             navigator.GoBack();
         }
@@ -158,13 +156,24 @@ void loop()
 
     if (receiver.IsDown(Buttons::SecretButton))
     {
-        if (navigator.state == kLanded)
+        if (!lift)
         {
-            navigator.LiftOff();
+            lift = true;
+
+            if (navigator.state == kLanded)
+            {
+                Serial.println("Lift Off!");
+                navigator.LiftOff();
+            }
+            else
+            {
+                Serial.println("Land!");
+                navigator.Land();
+            }
         }
-        else
-        {
-            navigator.Land();
-        }
+    }
+    else
+    {
+        lift = false;
     }
 }

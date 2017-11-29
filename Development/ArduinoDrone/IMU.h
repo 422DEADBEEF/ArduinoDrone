@@ -1,3 +1,16 @@
+/******************************************************************************
+*   File:           IMU.h
+*
+*   Description:    Most of this source code comes from the MPU6050 Arduino 
+*                   Examples. This class is a wrapper around the MPU6050
+*                   Arduino Library driver, and provides simple Yaw, Pitch,
+*                   and Roll values.
+*
+*   Authors:        Team 0xDEADBEEF:
+*                   Ryan Berge and Jeremy DeHaan
+*
+******************************************************************************/
+
 #ifndef IMU_H
 #define IMU_H
 

@@ -28,12 +28,19 @@ void Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
     sonar.Initialize();
     state = kLanded;
     kHoverSpeed = 200;
+    base_speed = 0;
 }
 
 void Navigator::Update()
 {
+    delay(NAVIGATION_CLOCK_DELAY);
+
     imu.Update();
-    sonar.Update();
+
+    if (state == kTakingOff || state == kLanding)
+    {
+        sonar.Update();
+    }
 
     float pitch = imu.GetPitch();
     float roll = imu.GetRoll();
@@ -110,6 +117,8 @@ void Navigator::Update()
 
         if (state == kTakingOff)
         {
+            delay(TAKEOFF_CLOCK_DELAY);
+
             if (sonar.IsRising())
             {
                 if (sonar.RisingRate() < DESIRED_RISING_RATE)
@@ -135,7 +144,6 @@ void Navigator::Update()
                     Diagnostics::SetLED(0, 0, 255);
                     return;
                 }
-
                 base_speed += ASCENSION_RATE;
             }
         }
@@ -192,17 +200,12 @@ void Navigator::Update()
 
 void Navigator::Ascend()
 {
-    if ((ne_speed + ASCENSION_RATE + base_speed) < MAX_BASE_SPEED &&
-        (nw_speed + ASCENSION_RATE + base_speed) < MAX_BASE_SPEED &&
-        (se_speed + ASCENSION_RATE + base_speed) < MAX_BASE_SPEED &&
-        (sw_speed + ASCENSION_RATE + base_speed) < MAX_BASE_SPEED)
+    if ((ne_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+        (nw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+        (se_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+        (sw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED)
     {
-        base_speed += ASCENSION_RATE;
-
-        analogWrite(ne_pin, ne_speed + base_speed);
-        analogWrite(nw_pin, nw_speed + base_speed);
-        analogWrite(se_pin, se_speed + base_speed);
-        analogWrite(sw_pin, sw_speed + base_speed);
+        base_speed += UP_DOWN_RATE;
     }
     else
     {
@@ -211,13 +214,25 @@ void Navigator::Ascend()
     }
 }
 
+void Navigator::StopAscend()
+{
+    if (base_speed >= UP_DOWN_RATE)
+    {
+        base_speed -= UP_DOWN_RATE;
+    }
+    else
+    {
+        base_speed = 0;
+    }
+}
+
 void Navigator::Descend()
 {
     if (base_speed > 0)
     {
-        if (base_speed > ASCENSION_RATE)
+        if (base_speed > UP_DOWN_RATE)
         {
-            base_speed -= ASCENSION_RATE;
+            base_speed -= UP_DOWN_RATE;
         }
         else
         {
@@ -231,12 +246,12 @@ void Navigator::Descend()
             se_speed = 0;
             sw_speed = 0;
         }
-
-        analogWrite(ne_pin, (ne_speed + base_speed > 0) ? ne_speed + base_speed : 0);
-        analogWrite(nw_pin, (nw_speed + base_speed > 0) ? nw_speed + base_speed : 0);
-        analogWrite(se_pin, (se_speed + base_speed > 0) ? se_speed + base_speed : 0);
-        analogWrite(sw_pin, (sw_speed + base_speed > 0) ? sw_speed + base_speed : 0);
     }
+}
+
+void Navigator::StopDescend()
+{
+    base_speed += UP_DOWN_RATE;
 }
 
 void Navigator::LiftOff()
@@ -248,11 +263,12 @@ void Navigator::LiftOff()
 void Navigator::Land()
 {
     state = kLanding;
-    Diagnostics::SetLED(255, 140, 0);    
+    Diagnostics::SetLED(255, 140, 0);
 }
 
 void Navigator::EmergencyShutdown()
 {
+    Diagnostics::SetLED(255, 0, 0);
     ne_speed = 0;
     nw_speed = 0;
     se_speed = 0;
@@ -263,6 +279,8 @@ void Navigator::EmergencyShutdown()
     analogWrite(nw_pin, nw_speed + base_speed);
     analogWrite(se_pin, se_speed + base_speed);
     analogWrite(sw_pin, sw_speed + base_speed);
+
+    state = kLanded;
 }
 
 void Navigator::GoForward()
