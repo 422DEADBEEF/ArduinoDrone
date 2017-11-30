@@ -14,32 +14,21 @@
 #define DIAGNOSTICS_H
 
 #include "Util.h"
+#include "BluetoothReceiver.h"
 
 namespace {
     DigitalPin red;
     DigitalPin blue;
     DigitalPin green;
+    BluetoothReceiver* bt_receiver;
 }
-
-/*
-// TODO: Redesign this as a packed bit-field to reduce memory footprint
-// Also maybe use it, at all
-struct POST_FLAGS
-{
-    bool bluetooth;
-    bool left_motor;
-    bool right_motor;
-    bool imu;
-    bool ultrasonic;
-};
-*/
 
 class Diagnostics
 {
 public:
 
 
-    static void Initialize(DigitalPin Red, DigitalPin Green, DigitalPin Blue)
+    static void Initialize(DigitalPin Red, DigitalPin Green, DigitalPin Blue, BluetoothReceiver* bt)
     {
         red = Red;
         blue = Blue;
@@ -48,6 +37,8 @@ public:
         pinMode(RED_PIN, OUTPUT);
         pinMode(GREEN_PIN, OUTPUT);
         pinMode(BLUE_PIN, OUTPUT);
+
+        bt_receiver = bt;
     }
 
     static void SetLED(uint8_t r, uint8_t g, uint8_t b)
@@ -57,47 +48,15 @@ public:
         digitalWrite(BLUE_PIN, b);
     }
 
-    /*
-    static bool post()
+    static void SendBTMessage(const char* message)
     {
-        POST_FLAGS flags{ false, false, false, false, false };
-        RunTest(flags);
-        Display(flags);
-
-        if (flags.bluetooth && flags.left_motor && flags.right_motor &&
-            flags.imu && flags.ultrasonic)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        bt_receiver->SendMessage(message);
     }
 
-    
-    static void RunTest(POST_FLAGS& flags)
+    static float DroneAbs(float val)
     {
-        // TODO: Design POST tests and set flags
-        flags.bluetooth = true;
-        flags.left_motor = true;
-        flags.right_motor = true;
-        flags.imu = true;
-        flags.ultrasonic = true;
+        return (val >= 0) ? val : -val;
     }
-
-    static void Display(POST_FLAGS& flags)
-    {
-        // TODO: Display result of POST on bluetooth (if available)
-        //       and LEDs
-    }
-
-    static void ErrorMessage(const char* message)
-    {
-        // TODO: Send message over bluetooth connection.
-        //       Also possibly flash LEDs.
-    }
-    */
 };
 
 #endif

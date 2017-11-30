@@ -6,12 +6,12 @@
 #define IMU_SDA_PIN 2
 #define IMU_SCL_PIN 3
 
-#define NE_MOTOR_PIN 9
+#define NE_MOTOR_PIN 5
 #define NW_MOTOR_PIN 6
-#define SE_MOTOR_PIN 5
-#define SW_MOTOR_PIN 13
+#define SE_MOTOR_PIN 13
+#define SW_MOTOR_PIN 9
 
-#define ULTRASONIC_TRIG_PIN 12
+#define ULTRASONIC_TRIG_PIN 8
 #define ULTRASONIC_ECHO_PIN 7
 
 #define RED_PIN A0

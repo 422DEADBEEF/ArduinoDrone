@@ -29,9 +29,12 @@ bool IMU::Initialize()
     Wire.begin();
     mpu.initialize();
 
+    Diagnostics::SetLED(0, 0, 255);
+
     if (!mpu.testConnection())
     {
-        //TODO: Diagnostics error
+        Diagnostics::SetLED(0, 0, 255);
+        return false;
     }    
 
     if (mpu.dmpInitialize() == 0) 
@@ -58,27 +61,33 @@ bool IMU::Initialize()
 
 void IMU::Update()
 {
-    fifoCount = mpu.getFIFOCount();
-    
-    while (fifoCount < packetSize) 
+    uint8_t mpuIntStatus = mpu.getIntStatus();
+
+    if ((mpuIntStatus & 0x10) || fifoCount == 1024) 
+    {
+        mpu.resetFIFO();
+    }
+    else
     {
         fifoCount = mpu.getFIFOCount();
+        
+        while (fifoCount < packetSize) 
+        {
+            fifoCount = mpu.getFIFOCount();
+        }
+
+        mpu.getFIFOBytes(fifoBuffer, packetSize);
+        
+        fifoCount -= packetSize;
+
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+        yaw = ypr[0] * 180/M_PI;
+        pitch = ypr[1] * 180/M_PI;
+        roll = ypr[2] * 180/M_PI;
     }
-
-    // read a packet from FIFO
-    mpu.getFIFOBytes(fifoBuffer, packetSize);
-    
-    // track FIFO count here in case there is > 1 packet available
-    // (this lets us immediately read more without waiting for an interrupt)
-    fifoCount -= packetSize;
-
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-    yaw = ypr[0] * 180/M_PI;
-    pitch = ypr[1] * 180/M_PI;
-    roll = ypr[2] * 180/M_PI;
 }
 
 void IMU::Calibrate()
@@ -88,6 +97,7 @@ void IMU::Calibrate()
     bool calibrated = false;
     while (!calibrated)
     {
+        Serial.println("Calibrating...");
         if (on)
         {
             Diagnostics::SetLED(0, 0, 0);
@@ -118,9 +128,11 @@ void IMU::Calibrate()
         mean_pitch /= 20;
         mean_roll /= 20;
 
-        
+        mean_yaw = (mean_yaw > 0) ? mean_yaw : -mean_yaw;
+        mean_pitch = (mean_pitch > 0) ? mean_pitch : -mean_pitch;
+        mean_roll = (mean_roll > 0) ? mean_roll : -mean_roll;
 
-        if (abs(mean_yaw) < CALIBRATION_THRESHOLD && abs(mean_pitch) < CALIBRATION_THRESHOLD && abs(mean_roll) < CALIBRATION_THRESHOLD)
+        if (mean_yaw < CALIBRATION_THRESHOLD && mean_pitch < CALIBRATION_THRESHOLD && mean_roll < CALIBRATION_THRESHOLD)
         {
             calibrated = true;
         }

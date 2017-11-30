@@ -14,7 +14,7 @@
 #ifndef IMU_H
 #define IMU_H
 
-#define CALIBRATION_THRESHOLD 0.01
+#define CALIBRATION_THRESHOLD 0.0001
 
 class IMU
 {

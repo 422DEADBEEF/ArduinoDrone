@@ -31,8 +31,11 @@ public:
     // Starts the UART SoftwareSerial connection
     void Initialize();
 
+    // Send a message over the BT connection
+    void SendMessage(const char* message);
+
     // Updates the button state by reading from the connection
-    void Update();
+    bool Update();
 
     // Checks to see if a particular button is pressed
     bool IsDown(Buttons button);

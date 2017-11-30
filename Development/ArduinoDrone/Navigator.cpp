@@ -8,27 +8,36 @@ Navigator::Navigator() : pitch_offset(0), roll_offset(0), ne_speed(0), nw_speed(
 {
 }
 
-void Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
+bool Navigator::Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw)
 {
     ne_pin = ne;
     nw_pin = nw;
     se_pin = se;
     sw_pin = sw;
 
-    Diagnostics::SetLED(255, 0, 0);
+    //Diagnostics::SetLED(255, 0, 0);
     if (imu.Initialize())
     {
         pinMode(ne_pin, OUTPUT);
         pinMode(nw_pin, OUTPUT);
         pinMode(se_pin, OUTPUT);
         pinMode(sw_pin, OUTPUT);
-        Diagnostics::SetLED(0, 255, 0);
     }
+    else
+    {
+        Diagnostics::SetLED(0, 0, 255);
+        return false;
+    }
+    Diagnostics::SendBTMessage("Calibration complete.");
+    Diagnostics::SendBTMessage("Calibrating Sonar...");
 
     sonar.Initialize();
     state = kLanded;
     kHoverSpeed = 200;
     base_speed = 0;
+
+    Diagnostics::SendBTMessage("Calibration complete.");
+    return true;
 }
 
 void Navigator::Update()
@@ -48,32 +57,33 @@ void Navigator::Update()
     if (state != kLanded)
     {
         float roll_angle = roll - roll_offset;
+        roll_angle = (roll_angle >= 0) ? roll_angle : -roll_angle;
 
-        if (abs(roll_angle) > STABILIZER_THRESHOLD)
+        if (roll_angle > STABILIZER_THRESHOLD)
         {
             if (roll_angle > 0)
             {
                 // we are tilting too far forward
-                if (base_speed < kHoverSpeed)
+                //if (base_speed < kHoverSpeed)
                 {
                     ne_speed += SENSITIVITY;
                     nw_speed += SENSITIVITY;
                 }
-                else
-                {
-                    se_speed -= SENSITIVITY;
-                    sw_speed -= SENSITIVITY;
-                }
+                //else
+                //{
+                //    se_speed -= SENSITIVITY;
+                //    sw_speed -= SENSITIVITY;
+                //}
             }
             else if (roll_angle < 0)
             {
                 // we are tilting backward
-                if (base_speed < kHoverSpeed)
-                {
-                    se_speed += SENSITIVITY;
-                    sw_speed += SENSITIVITY;
-                }
-                else
+                //if (base_speed < kHoverSpeed)
+                //{
+                //    se_speed += SENSITIVITY;
+                //    sw_speed += SENSITIVITY;
+                //}
+                //else
                 {
                     ne_speed -= SENSITIVITY;
                     nw_speed -= SENSITIVITY;
@@ -82,8 +92,9 @@ void Navigator::Update()
         }
 
         float pitch_angle = pitch - pitch_offset;
+        pitch_angle = (pitch_angle >= 0) ? pitch_angle : -pitch_angle;
         
-        if (abs(pitch_angle) > STABILIZER_THRESHOLD)
+        if (pitch_angle > STABILIZER_THRESHOLD)
         {
             if (pitch_angle > 0)
             {
@@ -93,21 +104,21 @@ void Navigator::Update()
                     ne_speed += SENSITIVITY;
                     se_speed += SENSITIVITY;
                 }
-                else
-                {
-                    nw_speed -= SENSITIVITY;
-                    sw_speed -= SENSITIVITY;
-                }
+                //else
+                //{
+                //    nw_speed -= SENSITIVITY;
+                //    sw_speed -= SENSITIVITY;
+                //}
             }
             else if (pitch_angle < 0)
             {
                 // we are tilting too far left
-                if (base_speed < kHoverSpeed)
-                {
-                    nw_speed += SENSITIVITY;
-                    sw_speed += SENSITIVITY;
-                }
-                else
+                //if (base_speed < kHoverSpeed)
+                //{
+                //    nw_speed += SENSITIVITY;
+                //    sw_speed += SENSITIVITY;
+                //}
+                //else
                 {
                     ne_speed -= SENSITIVITY;
                     se_speed -= SENSITIVITY;
@@ -132,6 +143,7 @@ void Navigator::Update()
 
                 if (sonar.GetDistance() >= HOVER_HEIGHT)
                 {
+                    Diagnostics::SendBTMessage("Stabilizing...");
                     state = kStabilizing;
                 }
             }
@@ -142,6 +154,7 @@ void Navigator::Update()
                     EmergencyShutdown();
                     state = kLanded;
                     Diagnostics::SetLED(0, 0, 255);
+                    Diagnostics::SendBTMessage("Max speed reached; unable to get airborne.");
                     return;
                 }
                 base_speed += ASCENSION_RATE;
@@ -150,7 +163,7 @@ void Navigator::Update()
 
         if (state == kStabilizing)
         {
-            Diagnostics::SetLED(200, 40, 220);
+            Diagnostics::SetLED(255, 0, 255);
             if (sonar.IsRising())
             {
                 base_speed -= ASCENSION_RATE;
@@ -161,11 +174,12 @@ void Navigator::Update()
             }
             else
             {
-                if (abs(sonar.RisingRate()) < STABLE_CONSTANT)
+                if (Diagnostics::DroneAbs(sonar.RisingRate()) < STABLE_CONSTANT)
                 {
                     state = kFlying;
                     kHoverSpeed = base_speed;
                     Diagnostics::SetLED(0, 255, 0);
+                    Diagnostics::SendBTMessage("Stabilization complete. Controls are enabled.");
                 }
             }
         }
@@ -200,37 +214,28 @@ void Navigator::Update()
 
 void Navigator::Ascend()
 {
-    if ((ne_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-        (nw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-        (se_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-        (sw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED)
+    if (state == kFlying)
     {
-        base_speed += UP_DOWN_RATE;
-    }
-    else
-    {
-        // Cannot safely rise
-        // LED? Bluetooth info?
+        if ((ne_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+            (nw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+            (se_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+            (sw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED)
+        {
+            base_speed += UP_DOWN_RATE;
+        }
+        else
+        {
+            // Cannot safely rise
+            // LED? Bluetooth info?
+        }
     }
 }
 
 void Navigator::StopAscend()
 {
-    if (base_speed >= UP_DOWN_RATE)
+    if (state == kFlying)
     {
-        base_speed -= UP_DOWN_RATE;
-    }
-    else
-    {
-        base_speed = 0;
-    }
-}
-
-void Navigator::Descend()
-{
-    if (base_speed > 0)
-    {
-        if (base_speed > UP_DOWN_RATE)
+        if (base_speed >= UP_DOWN_RATE)
         {
             base_speed -= UP_DOWN_RATE;
         }
@@ -238,32 +243,73 @@ void Navigator::Descend()
         {
             base_speed = 0;
         }
+    }
+}
 
-        if (base_speed == 0)
+void Navigator::Descend()
+{
+    if (state == kFlying)
+    {
+        if (base_speed > 0)
         {
-            ne_speed = 0;
-            nw_speed = 0;
-            se_speed = 0;
-            sw_speed = 0;
+            if (base_speed > UP_DOWN_RATE)
+            {
+                base_speed -= UP_DOWN_RATE;
+            }
+            else
+            {
+                base_speed = 0;
+            }
+
+            if (base_speed == 0)
+            {
+                ne_speed = 0;
+                nw_speed = 0;
+                se_speed = 0;
+                sw_speed = 0;
+            }
         }
     }
 }
 
 void Navigator::StopDescend()
 {
-    base_speed += UP_DOWN_RATE;
+    if (state == kFlying)
+    {
+        base_speed += UP_DOWN_RATE;
+    }
 }
 
 void Navigator::LiftOff()
 {
-    state = kTakingOff;
-    Diagnostics::SetLED(255, 140, 0);
+    if (state == kLanded)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            sonar.Update();
+        }
+
+        state = kTakingOff;
+        Diagnostics::SetLED(0, 0, 0);
+
+        base_speed = 120;
+        Diagnostics::SendBTMessage("Takeoff procedure initiated.");
+    }
 }
 
 void Navigator::Land()
 {
-    state = kLanding;
-    Diagnostics::SetLED(255, 140, 0);
+    if (state != kLanded)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            sonar.Update();
+        }
+
+        state = kLanding;
+        Diagnostics::SetLED(0, 0, 0);
+        Diagnostics::SendBTMessage("Landing...");
+    }
 }
 
 void Navigator::EmergencyShutdown()

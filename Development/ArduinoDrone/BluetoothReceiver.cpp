@@ -7,15 +7,22 @@ BluetoothReceiver::BluetoothReceiver()
 void BluetoothReceiver::Initialize()
 {
     BTserial.begin(38400);
+    state = 0;
 }
 
-void BluetoothReceiver::Update()
+bool BluetoothReceiver::Update()
 {
-    //state = 0;
     if (BTserial.available())
     {
         state = BTserial.read();
+        return true;
     }
+    return false;
+}
+
+void BluetoothReceiver::SendMessage(const char* message)
+{
+    BTserial.println(message);
 }
 
 bool BluetoothReceiver::IsDown(Buttons button)

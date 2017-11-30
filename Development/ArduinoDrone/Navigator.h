@@ -20,14 +20,14 @@
 #define STABILIZER_THRESHOLD 1
 #define MOVEMENT_ANGLE 15
 #define SENSITIVITY 1
-#define MAX_BASE_SPEED 200
+#define MAX_BASE_SPEED 243
 #define DESIRED_RISING_RATE 5
 #define HOVER_HEIGHT 75
 #define STABLE_CONSTANT 10
 #define LANDING_THRESHOLD 10
 
-#define NAVIGATION_CLOCK_DELAY 20
-#define TAKEOFF_CLOCK_DELAY 120
+#define NAVIGATION_CLOCK_DELAY 10
+#define TAKEOFF_CLOCK_DELAY 20
 
 enum NavState
 {
@@ -39,7 +39,7 @@ class Navigator
 public:
     Navigator();
 
-    void Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw);
+    bool Initialize(PwmPin ne, PwmPin nw, PwmPin se, PwmPin sw);
     void Update();
 
     void Ascend();
