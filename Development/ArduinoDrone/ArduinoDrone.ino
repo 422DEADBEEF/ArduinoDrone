@@ -13,14 +13,14 @@
 *
 ******************************************************************************/
 #include "Diagnostics.h"
-#include "BluetoothReceiver.h"
-//#include "SongDefinitions.h" // Buzzer subsystem uses a lot of memory
 #include "Navigator.h"
+#include "SongDefinitions.h"
 
 namespace 
 {
     BluetoothReceiver receiver;
     Navigator navigator;
+    buzzer::Song valkyries(0, A5);
 
     bool left = false;
     bool right = false;
@@ -37,6 +37,10 @@ void setup()
     // Remote drone has no Serial connection
     Serial.begin(9600);
     Serial.println("Initializing...");
+
+    buzzer::Valkyries(valkyries);
+    valkyries.Start();
+
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN, &receiver);
     
     receiver.Initialize();
@@ -51,7 +55,14 @@ void setup()
         Diagnostics::SendBTMessage("2");
     }
 
+    valkyries.Start();
+    while (valkyries.playing)
+    {
+        valkyries.Update();
+    }
+
     Serial.println("Entering main loop...");
+    
 }
 
 void loop()

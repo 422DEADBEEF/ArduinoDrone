@@ -125,86 +125,90 @@ void Navigator::Update()
                 }
             }
         }
+    }
+    if (state == kTakingOff)
+    {
+        delay(TAKEOFF_CLOCK_DELAY);
 
-        if (state == kTakingOff)
+        if (sonar.IsRising())
         {
-            delay(TAKEOFF_CLOCK_DELAY);
-
-            if (sonar.IsRising())
+            if (sonar.RisingRate() < DESIRED_RISING_RATE)
             {
-                if (sonar.RisingRate() < DESIRED_RISING_RATE)
+                base_speed += ASCENSION_RATE;
+                if (base_speed > MAX_BASE_SPEED)
                 {
-                    base_speed += ASCENSION_RATE;
-                    if (base_speed > MAX_BASE_SPEED)
-                    {
-                        base_speed = MAX_BASE_SPEED;
-                    }
-                }
-
-                if (sonar.GetDistance() >= HOVER_HEIGHT)
-                {
-                    Diagnostics::SendBTMessage("Stabilizing...");
-                    state = kStabilizing;
+                    base_speed = MAX_BASE_SPEED;
                 }
             }
-            else
+
+            if (sonar.GetDistance() >= HOVER_HEIGHT)
             {
-                if (base_speed + ASCENSION_RATE >= MAX_BASE_SPEED)
-                {
-                    EmergencyShutdown();
-                    state = kLanded;
-                    Diagnostics::SetLED(0, 0, 255);
-                    Diagnostics::SendBTMessage("Max speed reached; unable to get airborne.");
-                    return;
-                }
-                base_speed += ASCENSION_RATE;
+                Diagnostics::SendBTMessage("Stabilizing...");
+                state = kStabilizing;
             }
         }
-
-        if (state == kStabilizing)
+        else
         {
-            Diagnostics::SetLED(255, 0, 255);
-            if (sonar.IsRising())
+            if (base_speed + ASCENSION_RATE >= MAX_BASE_SPEED)
+            {
+                EmergencyShutdown();
+                state = kLanded;
+                Diagnostics::SetLED(0, 0, 255);
+                Diagnostics::SendBTMessage("Max speed reached; unable to get airborne.");
+                return;
+            }
+
+            Diagnostics::SendBTMessage("Increasing motor speed...");
+            base_speed += ASCENSION_RATE;
+        }
+    }
+
+    if (state == kStabilizing)
+    {
+        Diagnostics::SetLED(255, 0, 255);
+        if (sonar.IsRising())
+        {
+            base_speed -= ASCENSION_RATE;
+        }
+        else if (sonar.IsFalling())
+        {
+            base_speed += ASCENSION_RATE;
+        }
+        else
+        {
+            if (Diagnostics::DroneAbs(sonar.RisingRate()) < STABLE_CONSTANT)
+            {
+                state = kFlying;
+                kHoverSpeed = base_speed;
+                Diagnostics::SetLED(0, 255, 0);
+                Diagnostics::SendBTMessage("Stabilization complete. Controls are enabled.");
+            }
+        }
+    }
+
+    if (state == kLanding)
+    {
+        if (sonar.IsFalling())
+        {
+            if (sonar.GetDistance() < LANDING_THRESHOLD)
+            {
+                state = kLanded;
+                EmergencyShutdown();
+                delay(2000);
+                Diagnostics::SetLED(0, 255, 0);
+            }
+        }
+        else
+        {
+            if (base_speed - ASCENSION_RATE >= 0)
             {
                 base_speed -= ASCENSION_RATE;
             }
-            else if (sonar.IsFalling())
-            {
-                base_speed += ASCENSION_RATE;
-            }
-            else
-            {
-                if (Diagnostics::DroneAbs(sonar.RisingRate()) < STABLE_CONSTANT)
-                {
-                    state = kFlying;
-                    kHoverSpeed = base_speed;
-                    Diagnostics::SetLED(0, 255, 0);
-                    Diagnostics::SendBTMessage("Stabilization complete. Controls are enabled.");
-                }
-            }
         }
+    }
 
-        if (state == kLanding)
-        {
-            if (sonar.IsFalling())
-            {
-                if (sonar.GetDistance() < LANDING_THRESHOLD)
-                {
-                    state = kLanded;
-                    EmergencyShutdown();
-                    delay(2000);
-                    Diagnostics::SetLED(0, 255, 0);
-                }
-            }
-            else
-            {
-                if (base_speed - ASCENSION_RATE >= 0)
-                {
-                    base_speed -= ASCENSION_RATE;
-                }
-            }
-        }
-
+    if (state != kLanded)
+    {
         analogWrite(ne_pin, ((ne_speed + base_speed) <= 255) ? ne_speed + base_speed : 255);
         analogWrite(nw_pin, ((nw_speed + base_speed) <= 255) ? nw_speed + base_speed : 255);
         analogWrite(se_pin, ((se_speed + base_speed) <= 255) ? se_speed + base_speed : 255);
@@ -292,7 +296,7 @@ void Navigator::LiftOff()
         state = kTakingOff;
         Diagnostics::SetLED(0, 0, 0);
 
-        base_speed = 120;
+        base_speed = TAKEOFF_SPEED;
         Diagnostics::SendBTMessage("Takeoff procedure initiated.");
     }
 }

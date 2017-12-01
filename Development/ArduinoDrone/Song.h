@@ -1,34 +1,31 @@
-#include "Arduino.h"
+#pragma once
+
+#include "Diagnostics.h"
 #include "Frequencies.h"
 
-namespace {
-    const int kMaxNotes = 255;
-}
+#define kMaxNotes 64
+
+#define kSixteenthTriplet 167
+#define kSixteenth 250
+#define kEighthTriplet 333
+#define kDottedSixteenght 375
+#define kEighth 500
+#define kQuarterTriplet 667
+#define kDottedEighth 750
+#define kQuarter 1000
+#define kHalfTriplet 1333
+#define kDottedQuarter 1500
+#define kHalf 2000
+#define kWholeTriplet 2667
+#define kDottedHalf 3000
+#define kWhole 4000
+
 namespace buzzer
 {
-    struct Note
-    {
-        const static int kSixteenthTriplet = 167;
-        const static int kSixteenth = 250;
-        const static int kEighthTriplet = 333;
-        const static int kDottedSixteenght = 375;
-        const static int kEighth = 500;
-        const static int kQuarterTriplet = 667;
-        const static int kDottedEighth = 750;
-        const static int kQuarter = 1000;
-        const static int kHalfTriplet = 1333;
-        const static int kDottedQuarter = 1500;
-        const static int kHalf = 2000;
-        const static int kWholeTriplet = 2667;
-        const static int kDottedHalf = 3000;
-        const static int kWhole = 4000;
-    };
-
     class Song
     {
     public:
         explicit Song(int tempo, int pin);
-        // ~Song();
 
         void AddNote(int frequency, int value);
         void SetTempo(int tempo);
@@ -40,8 +37,9 @@ namespace buzzer
 
         void Update();
 
-    private:
         bool playing;
+
+    private:
         int array_position;
         unsigned long previous_time;
         int buzzer_pin;
@@ -49,7 +47,7 @@ namespace buzzer
         unsigned long note_started;
         int current_note;
         int total_notes;
-        int frequencies[kMaxNotes];
-        int times[kMaxNotes];
+        uint16_t frequencies[kMaxNotes];
+        uint16_t times[kMaxNotes];
     };
 }

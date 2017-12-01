@@ -98,6 +98,7 @@ void IMU::Calibrate()
     while (!calibrated)
     {
         Serial.println("Calibrating...");
+        
         if (on)
         {
             Diagnostics::SetLED(0, 0, 0);

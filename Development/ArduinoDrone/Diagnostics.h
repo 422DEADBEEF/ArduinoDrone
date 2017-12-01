@@ -13,7 +13,6 @@
 #ifndef DIAGNOSTICS_H
 #define DIAGNOSTICS_H
 
-#include "Util.h"
 #include "BluetoothReceiver.h"
 
 namespace {

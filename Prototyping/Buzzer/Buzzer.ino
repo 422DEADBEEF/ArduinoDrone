@@ -2,14 +2,14 @@
 
 #include "SongDefinitions.h"
 
-const int kBuzzerPin = 9;
+const int kBuzzerPin = A5;
 
 buzzer::Song mySong(0, kBuzzerPin);
 
 void setup() 
 {
     Serial.begin(9600);
-    buzzer::MaryHadALittleLamb(mySong);
+    buzzer::Valkyries(mySong);
 }
 
 bool ran = false;

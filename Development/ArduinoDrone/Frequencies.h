@@ -1,7 +1,8 @@
+#pragma once
 
 namespace buzzer
 {
-
+/*
     #define kC0 16
     #define kC0Sharp 17
     #define kD0 18
@@ -40,6 +41,7 @@ namespace buzzer
     #define kA2 110
     #define kA2Sharp 117
     #define kB2 123
+    */
 
     #define kC3 131
     #define kC3Sharp 139
@@ -92,7 +94,7 @@ namespace buzzer
     #define kA6 1760
     #define kA6Sharp 1865
     #define kB6 1976
-
+/*
     #define kC7 2093
     #define kC7Sharp 2217
     #define kD7 2349
@@ -118,4 +120,5 @@ namespace buzzer
     #define kA8 7040
     #define kA8Sharp 7459
     #define kB8 7902
+    */
 }
