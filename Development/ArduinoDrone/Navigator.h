@@ -32,7 +32,7 @@
 
 enum NavState
 {
-    kTakingOff, kLanding, kStabilizing, kFlying, kLanded
+    kTakingOff, kLanding, kStabilizing, kFlying, kLanded, kTesting
 };
 
 class Navigator

@@ -20,7 +20,7 @@ namespace
 {
     BluetoothReceiver receiver;
     Navigator navigator;
-    buzzer::Song valkyries(0, A5);
+    buzzer::Song valkyries(0, 4);
 
     bool left = false;
     bool right = false;
@@ -36,7 +36,7 @@ void setup()
 {
     // Remote drone has no Serial connection
     Serial.begin(9600);
-    Serial.println("Initializing...");
+    Diagnostics::SendBTMessage("Initializing...");
 
     buzzer::Valkyries(valkyries);
     valkyries.Start();
@@ -44,29 +44,36 @@ void setup()
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN, &receiver);
     
     receiver.Initialize();
-    if (navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN))
+
+    bool init = navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
+
+    analogReference(INTERNAL);
+    
+
+    // valkyries.Start();
+    // while (valkyries.playing)
+    // {
+    //     valkyries.Update();
+    // }
+
+    if (init)
     {
         Diagnostics::SetLED(0, 255, 0);
-        Diagnostics::SendBTMessage("1");
+        Diagnostics::SendBTMessage("Systems Green.");
     }
     else
     {
         Diagnostics::SetLED(0, 0, 255);
-        Diagnostics::SendBTMessage("2");
+        Diagnostics::SendBTMessage("Systems Not Green.");
     }
 
-    valkyries.Start();
-    while (valkyries.playing)
-    {
-        valkyries.Update();
-    }
-
-    Serial.println("Entering main loop...");
+    Diagnostics::SendBTMessage("Entering main loop...");
     
 }
 
 void loop()
 {
+    CheckBattery();
     navigator.Update();
 
     if (receiver.Update())
@@ -75,7 +82,7 @@ void loop()
         {
             if (!up)
             {
-                Serial.println("Ascend!");
+                Diagnostics::SendBTMessage("Ascend!");
                 up = true;
                 navigator.Ascend();
             }
@@ -89,7 +96,7 @@ void loop()
         {
             if (!down)
             {
-                Serial.println("Descend!");
+                Diagnostics::SendBTMessage("Descend!");
                 down = true;
                 navigator.Descend();
             }
@@ -103,7 +110,7 @@ void loop()
         {
             if (!right)
             {
-                Serial.println("Right!");
+                Diagnostics::SendBTMessage("Right!");
                 right = true;
                 navigator.GoRight();
             }
@@ -121,7 +128,7 @@ void loop()
         {
             if (!left)
             {
-                Serial.println("Left!");
+                Diagnostics::SendBTMessage("Left!");
                 left = true;
                 navigator.GoLeft();
             }
@@ -139,7 +146,7 @@ void loop()
         {
             if (!forward)
             {
-                Serial.println("Forward!");
+                Diagnostics::SendBTMessage("Forward!");
                 forward = true;
                 navigator.GoForward();
             }
@@ -157,7 +164,7 @@ void loop()
         {
             if (!back)
             {
-                Serial.println("Back!");
+                Diagnostics::SendBTMessage("Back!");
                 back = true;
                 navigator.GoBack();
             }
@@ -184,12 +191,12 @@ void loop()
 
                 if (navigator.state == kLanded)
                 {
-                    Serial.println("Lift Off!");
+                    Diagnostics::SendBTMessage("Lift Off!");
                     navigator.LiftOff();
                 }
                 else
                 {
-                    Serial.println("Land!");
+                    Diagnostics::SendBTMessage("Land!");
                     navigator.Land();
                 }
             }
@@ -199,4 +206,12 @@ void loop()
             lift = false;
         }
     }
+}
+
+void CheckBattery()
+{
+    int voltage = analogRead(A3);
+    char buffer[10];
+    char* str = itoa(voltage, buffer, 10);
+    Diagnostics::SendBTMessage(str);
 }

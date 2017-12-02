@@ -54,7 +54,8 @@ void Navigator::Update()
     float pitch = imu.GetPitch();
     float roll = imu.GetRoll();
 
-    if (state != kLanded)
+    /*
+    if (state != kLanded && state != kTesting)
     {
         float roll_angle = roll - roll_offset;
         roll_angle = (roll_angle >= 0) ? roll_angle : -roll_angle;
@@ -126,6 +127,8 @@ void Navigator::Update()
             }
         }
     }
+    
+
     if (state == kTakingOff)
     {
         delay(TAKEOFF_CLOCK_DELAY);
@@ -206,6 +209,7 @@ void Navigator::Update()
             }
         }
     }
+    */
 
     if (state != kLanded)
     {
@@ -218,21 +222,23 @@ void Navigator::Update()
 
 void Navigator::Ascend()
 {
-    if (state == kFlying)
-    {
-        if ((ne_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-            (nw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-            (se_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
-            (sw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED)
-        {
-            base_speed += UP_DOWN_RATE;
-        }
-        else
-        {
-            // Cannot safely rise
-            // LED? Bluetooth info?
-        }
-    }
+    // if (state == kFlying)
+    // {
+    //     if ((ne_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+    //         (nw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+    //         (se_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED &&
+    //         (sw_speed + UP_DOWN_RATE + base_speed) < MAX_BASE_SPEED)
+    //     {
+    //         base_speed += UP_DOWN_RATE;
+    //     }
+    //     else
+    //     {
+    //         // Cannot safely rise
+    //         // LED? Bluetooth info?
+    //     }
+    // }
+    state = kTesting;
+    //base_speed = 80;
 }
 
 void Navigator::StopAscend()
@@ -252,28 +258,30 @@ void Navigator::StopAscend()
 
 void Navigator::Descend()
 {
-    if (state == kFlying)
-    {
-        if (base_speed > 0)
-        {
-            if (base_speed > UP_DOWN_RATE)
-            {
-                base_speed -= UP_DOWN_RATE;
-            }
-            else
-            {
-                base_speed = 0;
-            }
+    // if (state == kFlying)
+    // {
+    //     if (base_speed > 0)
+    //     {
+    //         if (base_speed > UP_DOWN_RATE)
+    //         {
+    //             base_speed -= UP_DOWN_RATE;
+    //         }
+    //         else
+    //         {
+    //             base_speed = 0;
+    //         }
 
-            if (base_speed == 0)
-            {
-                ne_speed = 0;
-                nw_speed = 0;
-                se_speed = 0;
-                sw_speed = 0;
-            }
-        }
-    }
+    //         if (base_speed == 0)
+    //         {
+    //             ne_speed = 0;
+    //             nw_speed = 0;
+    //             se_speed = 0;
+    //             sw_speed = 0;
+    //         }
+    //     }
+    // }
+    state = kTesting;
+    //base_speed = 35;
 }
 
 void Navigator::StopDescend()
@@ -340,6 +348,11 @@ void Navigator::GoForward()
         forward = true;
         roll_offset += MOVEMENT_ANGLE;
     }
+    else if (state == kTesting)
+    {
+        sw_speed = 50;
+        se_speed = 50;
+    }
 }
 
 void Navigator::GoBack()
@@ -348,6 +361,11 @@ void Navigator::GoBack()
     {
         backward = true;
         roll_offset -= MOVEMENT_ANGLE;
+    }
+    else if (state == kTesting)
+    {
+        nw_speed = 50;
+        ne_speed = 50;
     }
 }
 
@@ -358,6 +376,11 @@ void Navigator::GoLeft()
         left = true;
         pitch_offset -= MOVEMENT_ANGLE;
     }
+    else if (state == kTesting)
+    {
+        ne_speed = 50;
+        se_speed = 50;
+    }
 }
 
 void Navigator::GoRight()
@@ -366,6 +389,11 @@ void Navigator::GoRight()
     {
         forward = true;
         pitch_offset += MOVEMENT_ANGLE;
+    }
+    else if (state == kTesting)
+    {
+        nw_speed = 50;
+        sw_speed = 50;
     }
 }
 
@@ -376,6 +404,13 @@ void Navigator::StopForward()
         forward = false;
         roll_offset -= MOVEMENT_ANGLE;
     }
+    else if (state == kTesting)
+    {
+        nw_speed = 0;
+        ne_speed = 0;
+        sw_speed = 0;
+        se_speed = 0;
+    }
 }
 
 void Navigator::StopBack()
@@ -384,6 +419,13 @@ void Navigator::StopBack()
     {
         backward = true;
         roll_offset += MOVEMENT_ANGLE;
+    }
+    else if (state == kTesting)
+    {
+        nw_speed = 0;
+        ne_speed = 0;
+        sw_speed = 0;
+        se_speed = 0;
     }
 }
 
@@ -394,6 +436,13 @@ void Navigator::StopLeft()
         left = false;
         pitch_offset += MOVEMENT_ANGLE;
     }
+    else if (state == kTesting)
+    {
+        nw_speed = 0;
+        ne_speed = 0;
+        sw_speed = 0;
+        se_speed = 0;
+    }
 }
 
 void Navigator::StopRight()
@@ -402,5 +451,12 @@ void Navigator::StopRight()
     {
         forward = false;
         pitch_offset -= MOVEMENT_ANGLE;
+    }
+    else if (state == kTesting)
+    {
+        nw_speed = 0;
+        ne_speed = 0;
+        sw_speed = 0;
+        se_speed = 0;
     }
 }
