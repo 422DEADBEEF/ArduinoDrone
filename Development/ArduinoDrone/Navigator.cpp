@@ -54,7 +54,7 @@ void Navigator::Update()
     float pitch = imu.GetPitch();
     float roll = imu.GetRoll();
 
-    /*
+    
     if (state != kLanded && state != kTesting)
     {
         float roll_angle = roll - roll_offset;
@@ -209,7 +209,6 @@ void Navigator::Update()
             }
         }
     }
-    */
 
     if (state != kLanded)
     {
@@ -238,7 +237,7 @@ void Navigator::Ascend()
     //     }
     // }
     state = kTesting;
-    //base_speed = 80;
+    Diagnostics::SetLED(255, 0, 255);
 }
 
 void Navigator::StopAscend()

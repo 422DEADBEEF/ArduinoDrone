@@ -14,13 +14,12 @@
 ******************************************************************************/
 #include "Diagnostics.h"
 #include "Navigator.h"
-#include "SongDefinitions.h"
+//#include "SongDefinitions.h"
 
 namespace 
 {
     BluetoothReceiver receiver;
     Navigator navigator;
-    buzzer::Song valkyries(0, 4);
 
     bool left = false;
     bool right = false;
@@ -38,9 +37,6 @@ void setup()
     Serial.begin(9600);
     Diagnostics::SendBTMessage("Initializing...");
 
-    buzzer::Valkyries(valkyries);
-    valkyries.Start();
-
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN, &receiver);
     
     receiver.Initialize();
@@ -48,13 +44,7 @@ void setup()
     bool init = navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
 
     analogReference(INTERNAL);
-    
-
-    // valkyries.Start();
-    // while (valkyries.playing)
-    // {
-    //     valkyries.Update();
-    // }
+    pinMode(12, OUTPUT);
 
     if (init)
     {
@@ -210,8 +200,12 @@ void loop()
 
 void CheckBattery()
 {
-    int voltage = analogRead(A3);
-    char buffer[10];
-    char* str = itoa(voltage, buffer, 10);
-    Diagnostics::SendBTMessage(str);
+    int reading = analogRead(A3);
+    //char buffer[10];
+    //char* str = itoa(reading, buffer, 10);
+    //Diagnostics::SendBTMessage(str);
+    if (reading <= 590)
+    {
+        digitalWrite(12, HIGH);
+    }
 }
