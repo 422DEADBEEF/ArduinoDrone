@@ -42,6 +42,7 @@ void setup() {
 
   //Bluetooth HC-05 runs at 38400
   BTserial.begin(38400); 
+  Serial.begin(9600);
   
   // initialize the buttons
   for(int i = 0; i < ButtonCount; i++)
@@ -55,9 +56,16 @@ void loop() {
   // read the state of the pushbutton value:
   ButtonState state = getButtonState();
 
+  if(state != lastState)
+    BTserial.write(state);
 
-  BTserial.write(state);
+  lastState = state;
 
-  delay(100);
-
+  if(BTserial.available() > 0)
+  {
+    while(BTserial.available() > 0)
+    {
+      Serial.print((char)BTserial.read());
+    }
+  }
 }
