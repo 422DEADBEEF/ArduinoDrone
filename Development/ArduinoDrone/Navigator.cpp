@@ -1,5 +1,6 @@
 #include "Navigator.h"
 #include "Diagnostics.h"
+#include <string.h>
 
 
 Navigator::Navigator() : pitch_offset(0), roll_offset(0), ne_speed(0), nw_speed(0), 
@@ -127,7 +128,26 @@ void Navigator::Update()
             }
         }
     }
-    
+
+    if (state == kFlying)
+    {
+        char pitchBuffer[6];
+        char rollBuffer[6];
+        dtostrf(imu.GetPitch(), 3, 2, pitchBuffer);
+        dtostrf(imu.GetRoll(), 3, 2, rollBuffer);
+
+        char messageBuffer[28] = "Pitch:       \tRoll:       \0";
+        memcpy(messageBuffer + 7, pitchBuffer, 6);
+        memcpy(messageBuffer + 21, pitchBuffer, 6);
+        for (int i = 0; i < 27; i++)
+        {
+            if (messageBuffer[i] == '\0')
+            {
+                messageBuffer[i] = ' ';
+            }
+        }
+        Diagnostics::SendBTMessage(messageBuffer);
+    }    
 
     if (state == kTakingOff)
     {
@@ -191,15 +211,14 @@ void Navigator::Update()
 
     if (state == kLanding)
     {
-        if (sonar.IsFalling())
+
+        if (sonar.GetDistance() < LANDING_THRESHOLD)
         {
-            if (sonar.GetDistance() < LANDING_THRESHOLD)
-            {
-                state = kLanded;
-                EmergencyShutdown();
-                delay(2000);
-                Diagnostics::SetLED(0, 255, 0);
-            }
+            Diagnostics::SendBTMessage("Landing complete.");
+            state = kLanded;
+            EmergencyShutdown();
+            delay(2000);
+            Diagnostics::SetLED(0, 255, 0);
         }
         else
         {
@@ -208,6 +227,18 @@ void Navigator::Update()
                 base_speed -= ASCENSION_RATE;
             }
         }
+        char sonarBuffer[8];
+        dtostrf(sonar.GetDistance(), 5, 2, sonarBuffer);
+        char messageBuffer[18] = "Distance:        ";
+        memcpy(messageBuffer + 10, sonarBuffer, 6);
+        for (int i = 0; i < 17; i++)
+        {
+            if (messageBuffer[i] == '\0')
+            {
+                messageBuffer[i] = ' ';
+            }
+        }
+        Diagnostics::SendBTMessage(messageBuffer);
     }
 
     if (state != kLanded)
@@ -279,8 +310,9 @@ void Navigator::Descend()
     //         }
     //     }
     // }
-    state = kTesting;
-    //base_speed = 35;
+    state = kFlying;
+    Diagnostics::SetLED(0, 255, 0);
+    base_speed = 100;
 }
 
 void Navigator::StopDescend()
