@@ -66,30 +66,14 @@ void Navigator::Update()
             if (roll_angle > 0)
             {
                 // we are tilting too far forward
-                //if (base_speed < kHoverSpeed)
-                {
-                    ne_speed += SENSITIVITY;
-                    nw_speed += SENSITIVITY;
-                }
-                //else
-                //{
-                //    se_speed -= SENSITIVITY;
-                //    sw_speed -= SENSITIVITY;
-                //}
+                ne_speed += SENSITIVITY;
+                nw_speed += SENSITIVITY;
             }
             else if (roll_angle < 0)
             {
                 // we are tilting backward
-                //if (base_speed < kHoverSpeed)
-                //{
-                //    se_speed += SENSITIVITY;
-                //    sw_speed += SENSITIVITY;
-                //}
-                //else
-                {
-                    ne_speed -= SENSITIVITY;
-                    nw_speed -= SENSITIVITY;
-                }
+                ne_speed -= SENSITIVITY;
+                nw_speed -= SENSITIVITY;
             }
         }
 
@@ -101,30 +85,14 @@ void Navigator::Update()
             if (pitch_angle > 0)
             {
                 // we are tilting too far right
-                if (base_speed < kHoverSpeed)
-                {
-                    ne_speed += SENSITIVITY;
-                    se_speed += SENSITIVITY;
-                }
-                //else
-                //{
-                //    nw_speed -= SENSITIVITY;
-                //    sw_speed -= SENSITIVITY;
-                //}
+                ne_speed += SENSITIVITY;
+                se_speed += SENSITIVITY;
             }
             else if (pitch_angle < 0)
             {
                 // we are tilting too far left
-                //if (base_speed < kHoverSpeed)
-                //{
-                //    nw_speed += SENSITIVITY;
-                //    sw_speed += SENSITIVITY;
-                //}
-                //else
-                {
-                    ne_speed -= SENSITIVITY;
-                    se_speed -= SENSITIVITY;
-                }
+                ne_speed -= SENSITIVITY;
+                se_speed -= SENSITIVITY;
             }
         }
     }
@@ -211,14 +179,16 @@ void Navigator::Update()
 
     if (state == kLanding)
     {
-
-        if (sonar.GetDistance() < LANDING_THRESHOLD)
+        if (sonar.IsFalling())
         {
-            Diagnostics::SendBTMessage("Landing complete.");
-            state = kLanded;
-            EmergencyShutdown();
-            delay(2000);
-            Diagnostics::SetLED(0, 255, 0);
+            if (sonar.GetDistance() < LANDING_THRESHOLD)
+            {
+                Diagnostics::SendBTMessage("Landing complete.");
+                state = kLanded;
+                EmergencyShutdown();
+                delay(2000);
+                Diagnostics::SetLED(0, 255, 0);
+            }
         }
         else
         {

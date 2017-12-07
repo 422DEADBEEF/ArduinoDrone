@@ -50,7 +50,14 @@ void Sonar::Update()
 
 float Sonar::GetDistance()
 {
-    return distance;
+    if (distance < SONAR_MAX_DISTANCE)
+    {
+        return distance;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 bool Sonar::IsRising()
@@ -75,20 +82,23 @@ bool Sonar::IsRising()
 bool Sonar::IsFalling()
 {
     float prev_value = distance_log[log_head];
+    float mean = 0;
     for (int i = 1; i < SONAR_DISTANCE_LOG_SIZE; ++i)
     {
         int index = (i + log_head) % SONAR_DISTANCE_LOG_SIZE;
 
-        if (distance_log[index] >= prev_value)
-        {
-            return false;
-        }
-        else
-        {
-            prev_value = distance_log[index];
-        }
+        mean += distance_log[index] - prev_value;
+        prev_value = distance_log[index];
     }
-    return true;
+
+    if (mean / SONAR_DISTANCE_LOG_SIZE < 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 float Sonar::RisingRate()
