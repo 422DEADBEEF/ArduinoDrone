@@ -28,17 +28,20 @@ namespace
     bool forward = false;
     bool back = false;
     bool lift = false;
+
+    int lowLightReading = 480;
+    float lowBatteryReading = 3.19;
 }
 
 
-void setup() 
+void setup()
 {
     // Remote drone has no Serial connection
     Serial.begin(9600);
-    
+
 
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN, &receiver);
-    
+
     Diagnostics::SetLED(255, 0, 0);
     receiver.Initialize();
     Diagnostics::SetLED(0, 0, 255);
@@ -47,7 +50,6 @@ void setup()
 
     bool init = navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
 
-    analogReference(INTERNAL);
     pinMode(12, OUTPUT);
 
     if (init)
@@ -62,12 +64,13 @@ void setup()
     }
 
     Diagnostics::SendBTMessage("Entering main loop...");
-    
+
 }
 
 void loop()
 {
     CheckBattery();
+    CheckLight();
     navigator.Update();
 
     if (receiver.Update())
@@ -204,12 +207,47 @@ void loop()
 
 void CheckBattery()
 {
+    static int count = 0;
+    static float vAvg = 0;
+
     int reading = analogRead(A3);
-    //char buffer[10];
-    //char* str = itoa(reading, buffer, 10);
-    //Diagnostics::SendBTMessage(str);
-    if (reading <= 590)
+
+    float voltage = reading * (5.f/1023);
+
+    if(voltage >= 0)
     {
-        digitalWrite(12, HIGH);
+        vAvg += voltage;
+        count++;
+
+        if(count == 5)
+        {
+            float average = (vAvg/count);
+            if(average < lowBatteryReading)
+            {
+                Diagnostics::SendBTMessage("Battery is low. Please charge.");
+                digitalWrite(12, HIGH);
+
+            }
+            count = 0;
+            vAvg = 0;
+        }
+
     }
+}
+
+void CheckLight()
+{
+
+    int reading = analogRead(A5);
+
+    if(reading < lowLightReading)
+    {
+        Diagnostics::SendBTMessage("It's getting dark. Turning on Night Lights.");
+        digitalWrite(A4, HIGH);
+    }
+    else
+    {
+        digitalWrite(A4, LOW);
+    }
+
 }
