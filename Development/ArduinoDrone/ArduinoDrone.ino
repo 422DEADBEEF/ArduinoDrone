@@ -30,7 +30,9 @@ namespace
     bool lift = false;
 
     int lowLightReading = 480;
+    bool lowLightState = false;
     float lowBatteryReading = 3.19;
+    bool lowBatteryState = false;
 }
 
 
@@ -224,8 +226,11 @@ void CheckBattery()
             float average = (vAvg/count);
             if(average < lowBatteryReading)
             {
-                Diagnostics::SendBTMessage("Battery is low. Please charge.");
+                if(!lowBatteryState)
+                    Diagnostics::SendBTMessage("Battery is low. Please charge.");
                 digitalWrite(12, HIGH);
+
+                lowBatteryState = true;
 
             }
             count = 0;
@@ -242,12 +247,15 @@ void CheckLight()
 
     if(reading < lowLightReading)
     {
-        Diagnostics::SendBTMessage("It's getting dark. Turning on Night Lights.");
+        if(!lowLightState)
+            Diagnostics::SendBTMessage("It's getting dark. You should stop flying.");
         digitalWrite(A4, HIGH);
+        lowLightState = true;
     }
     else
     {
         digitalWrite(A4, LOW);
+        lowLightState = false;
     }
 
 }
