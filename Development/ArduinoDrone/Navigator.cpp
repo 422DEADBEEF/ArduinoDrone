@@ -282,7 +282,7 @@ void Navigator::Descend()
     // }
     state = kFlying;
     Diagnostics::SetLED(0, 255, 0);
-    base_speed = 100;
+    base_speed = 60;
 }
 
 void Navigator::StopDescend()
