@@ -17,9 +17,13 @@ enum ButtonPins{
   
 };
 
+char droneMessage[100];
+int messagePos = 0;
+short droneSequence = 0;
+
+short commandSequence = 0;
 
 typedef byte ButtonState;
-
 ButtonState lastState = 0;
 
 ButtonState getButtonState()
@@ -57,15 +61,33 @@ void loop() {
   ButtonState state = getButtonState();
 
   if(state != lastState)
+  {
+    Serial.print("Sending Command #");
+    Serial.println(commandSequence);
+    commandSequence++;
     BTserial.write(state);
+  }
 
   lastState = state;
 
   if(BTserial.available() > 0)
   {
-    while(BTserial.available() > 0)
+    char nextChar = BTserial.read();
+    if(nextChar == '\n')
     {
-      Serial.print((char)BTserial.read());
+      droneMessage[messagePos] = '\0';
+      Serial.print("Drone Message #");
+      Serial.print(droneSequence);
+      Serial.print(": ");
+      Serial.println(droneMessage);
+
+      droneSequence++;
+      messagePos = 0;
+    }
+    else
+    {
+      droneMessage[messagePos] = nextChar;
+      messagePos++;
     }
   }
 }
