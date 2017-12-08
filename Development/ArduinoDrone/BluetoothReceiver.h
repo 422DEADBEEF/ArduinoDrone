@@ -40,6 +40,8 @@ public:
     // Checks to see if a particular button is pressed
     bool IsDown(Buttons button);
 
+    ButtonState GetButtonState() const;
+
 private:
     ButtonState state;
 };

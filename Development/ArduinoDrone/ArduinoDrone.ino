@@ -35,11 +35,15 @@ void setup()
 {
     // Remote drone has no Serial connection
     Serial.begin(9600);
-    Diagnostics::SendBTMessage("Initializing...");
+    
 
     Diagnostics::Initialize(RED_PIN, GREEN_PIN, BLUE_PIN, &receiver);
     
+    Diagnostics::SetLED(255, 0, 0);
     receiver.Initialize();
+    Diagnostics::SetLED(0, 0, 255);
+
+    Diagnostics::SendBTMessage("Initializing...");
 
     bool init = navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
 
