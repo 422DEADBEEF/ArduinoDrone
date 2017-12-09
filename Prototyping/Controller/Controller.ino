@@ -14,7 +14,7 @@ enum ButtonPins{
   SecretButton,
   OnOffButton,
   ButtonCount = 8
-  
+
 };
 
 char droneMessage[100];
@@ -22,6 +22,9 @@ int messagePos = 0;
 short droneSequence = 0;
 
 short commandSequence = 0;
+const int RESEND_TIMEOUT = 6000;
+int resendTimer = 0;
+bool waitForACK = false;
 
 typedef byte ButtonState;
 ButtonState lastState = 0;
@@ -29,7 +32,7 @@ ButtonState lastState = 0;
 ButtonState getButtonState()
 {
   ButtonState state = 0;
-  
+
   for(int i = 0; i < ButtonCount; i++)
   {
     byte button = (1 << i);
@@ -39,21 +42,19 @@ ButtonState getButtonState()
   }
 
   return state;
-  
 }
 
 void setup() {
 
   //Bluetooth HC-05 runs at 38400
-  BTserial.begin(38400); 
+  BTserial.begin(38400);
   Serial.begin(9600);
-  
+
   // initialize the buttons
   for(int i = 0; i < ButtonCount; i++)
   {
     pinMode(LeftButton+i, INPUT);
   }
-  
 }
 
 void loop() {
@@ -62,32 +63,57 @@ void loop() {
 
   if(state != lastState)
   {
-    Serial.print("Sending Command #");
+    Serial.print("Controller: Sending Command #");
     Serial.println(commandSequence);
-    commandSequence++;
     BTserial.write(state);
+    waitForACK = true;
   }
 
   lastState = state;
 
   if(BTserial.available() > 0)
   {
-    char nextChar = BTserial.read();
-    if(nextChar == '\n')
+    byte receivedByte = BTserial.read();
+    if(receivedByte == 1)
     {
-      droneMessage[messagePos] = '\0';
-      Serial.print("Drone Message #");
-      Serial.print(droneSequence);
-      Serial.print(": ");
-      Serial.println(droneMessage);
-
-      droneSequence++;
-      messagePos = 0;
+      Serial.print("Controller: ACK for Command # ");
+      Serial.print(commandSequence);
+      Serial.println(" received.");
+      commandSequence++;
+      waitForACK = false;
+      resendTimer = 0;
     }
     else
     {
-      droneMessage[messagePos] = nextChar;
-      messagePos++;
+      char nextChar = (char)receivedByte;
+      if(nextChar == '\n')
+      {
+        droneMessage[messagePos] = '\0';
+        Serial.print("Drone Message #");
+        Serial.print(droneSequence);
+        Serial.print(": ");
+        Serial.println(droneMessage);
+
+        droneSequence++;
+        messagePos = 0;
+      }
+      else
+      {
+        droneMessage[messagePos] = nextChar;
+        messagePos++;
+      }
+    }
+  }
+
+  if(waitForACK)
+  {
+    resendTimer++;
+
+    if(resendTimer == RESEND_TIMEOUT)
+    {
+      Serial.print("Controller: Re-Sending Command #");
+      Serial.println(commandSequence);
+      BTserial.write(lastState);
     }
   }
 }

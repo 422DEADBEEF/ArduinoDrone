@@ -17,6 +17,9 @@ bool BluetoothReceiver::Update()
     if (BTserial.available())
     {
         state = BTserial.read();
+        byte ACK = 1;
+        BTserial.write(ACK);
+
         return true;
     }
     return false;
