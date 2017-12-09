@@ -53,6 +53,7 @@ void setup()
     bool init = navigator.Initialize(NE_MOTOR_PIN, NW_MOTOR_PIN, SE_MOTOR_PIN, SW_MOTOR_PIN);
 
     pinMode(12, OUTPUT);
+    pinMode(A4, OUTPUT);
 
     if (init)
     {
@@ -249,7 +250,8 @@ void CheckLight()
     if(reading < lowLightReading)
     {
         if(!lowLightState)
-            Diagnostics::SendBTMessage("It's getting dark. You should stop flying.");
+            Diagnostics::SendBTMessage("It's getting dark. Turning on lights.");
+
         digitalWrite(A4, HIGH);
         lowLightState = true;
     }
