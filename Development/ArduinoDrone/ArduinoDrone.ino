@@ -179,6 +179,7 @@ void loop()
 
         if (receiver.IsDown(Buttons::OnOffButton))
         {
+            Diagnostics::SendBTMessage("Emergency Shutdown!");
             navigator.EmergencyShutdown();
         }
 

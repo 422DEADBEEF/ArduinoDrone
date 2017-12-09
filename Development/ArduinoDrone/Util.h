@@ -53,5 +53,6 @@ typedef uint8_t AnalogPin;
 typedef uint8_t PwmPin;
 
 typedef uint8_t MotorSpeed;
+typedef int8_t MotorSpeedTuner;
 
 #endif

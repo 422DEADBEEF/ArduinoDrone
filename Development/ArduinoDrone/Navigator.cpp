@@ -66,14 +66,30 @@ void Navigator::Update()
             if (roll_angle > 0)
             {
                 // we are tilting too far forward
-                ne_speed += SENSITIVITY;
-                nw_speed += SENSITIVITY;
+                if (ne_speed <= 45 && nw_speed <= 45)
+                {
+                    ne_speed += SENSITIVITY;
+                    nw_speed += SENSITIVITY;
+                }
+                else
+                {
+                    se_speed -= SENSITIVITY;
+                    sw_speed -= SENSITIVITY;
+                }
             }
             else if (roll_angle < 0)
             {
                 // we are tilting backward
-                ne_speed -= SENSITIVITY;
-                nw_speed -= SENSITIVITY;
+                if (se_speed <= 45 && sw_speed <= 45)
+                {
+                    se_speed += SENSITIVITY;
+                    sw_speed += SENSITIVITY;
+                }
+                else
+                {
+                    ne_speed -= SENSITIVITY;
+                    nw_speed -= SENSITIVITY;
+                }
             }
         }
 
@@ -85,14 +101,31 @@ void Navigator::Update()
             if (pitch_angle > 0)
             {
                 // we are tilting too far right
-                ne_speed += SENSITIVITY;
-                se_speed += SENSITIVITY;
+                if (ne_speed <= 45 && se_speed <= 45)
+                {
+                    ne_speed += SENSITIVITY;
+                    se_speed += SENSITIVITY;
+                }
+                else
+                {
+                    nw_speed -= SENSITIVITY;
+                    sw_speed -= SENSITIVITY;
+                }
             }
             else if (pitch_angle < 0)
             {
                 // we are tilting too far left
-                ne_speed -= SENSITIVITY;
-                se_speed -= SENSITIVITY;
+                if (ne_speed <= 45 && se_speed <= 45)
+                {
+
+                    nw_speed += SENSITIVITY;
+                    sw_speed += SENSITIVITY;
+                }
+                else
+                {
+                    ne_speed -= SENSITIVITY;
+                    se_speed -= SENSITIVITY;
+                }
             }
         }
     }
@@ -213,10 +246,51 @@ void Navigator::Update()
 
     if (state != kLanded)
     {
-        analogWrite(ne_pin, ((ne_speed + base_speed) <= 255) ? ne_speed + base_speed : 255);
-        analogWrite(nw_pin, ((nw_speed + base_speed) <= 255) ? nw_speed + base_speed : 255);
-        analogWrite(se_pin, ((se_speed + base_speed) <= 255) ? se_speed + base_speed : 255);
-        analogWrite(sw_pin, ((sw_speed + base_speed) <= 255) ? sw_speed + base_speed : 255);
+        int16_t ne_net_speed = (int16_t)ne_speed + (int16_t)base_speed;
+        int16_t nw_net_speed = (int16_t)nw_speed + (int16_t)base_speed;
+        int16_t se_net_speed = (int16_t)se_speed + (int16_t)base_speed;
+        int16_t sw_net_speed = (int16_t)sw_speed + (int16_t)base_speed;
+
+        if (ne_net_speed < 0)
+        {
+            ne_net_speed = 0;
+        }
+        else if (ne_net_speed > 255)
+        {
+            ne_net_speed = 255;
+        }
+
+        if (nw_net_speed < 0)
+        {
+            nw_net_speed = 0;
+        }
+        else if (nw_net_speed > 255)
+        {
+            nw_net_speed = 255;
+        }
+
+        if (se_net_speed < 0)
+        {
+            se_net_speed = 0;
+        }
+        else if (se_net_speed > 255)
+        {
+            se_net_speed = 255;
+        }
+
+        if (sw_net_speed < 0)
+        {
+            sw_net_speed = 0;
+        }
+        else if (sw_net_speed > 255)
+        {
+            sw_net_speed = 255;
+        }
+
+        analogWrite(ne_pin, (MotorSpeed)ne_net_speed);
+        analogWrite(nw_pin, (MotorSpeed)nw_net_speed);
+        analogWrite(se_pin, (MotorSpeed)se_net_speed);
+        analogWrite(sw_pin, (MotorSpeed)sw_net_speed);
     }
 }
 
@@ -238,7 +312,13 @@ void Navigator::Ascend()
     //     }
     // }
     state = kTesting;
-    Diagnostics::SetLED(255, 0, 255);
+    Diagnostics::SetLED(0, 255, 255);
+    base_speed = 0;
+    nw_speed = 0;
+    sw_speed = 0;
+    ne_speed = 0;
+    nw_speed = 0;
+    Diagnostics::SendBTMessage("Testing mode enabled.");
 }
 
 void Navigator::StopAscend()
@@ -282,7 +362,12 @@ void Navigator::Descend()
     // }
     state = kFlying;
     Diagnostics::SetLED(0, 255, 0);
+    Diagnostics::SendBTMessage("Flight mode enabled.");
     base_speed = 60;
+    nw_speed = 0;
+    sw_speed = 0;
+    ne_speed = 0;
+    nw_speed = 0;
 }
 
 void Navigator::StopDescend()

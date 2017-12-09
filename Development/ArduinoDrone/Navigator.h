@@ -17,7 +17,7 @@
 
 #define ASCENSION_RATE 1
 #define UP_DOWN_RATE 12
-#define STABILIZER_THRESHOLD 10
+#define STABILIZER_THRESHOLD 4
 #define MOVEMENT_ANGLE 25
 #define SENSITIVITY 1
 #define MAX_BASE_SPEED 243
@@ -27,7 +27,7 @@
 #define LANDING_THRESHOLD 10
 #define TAKEOFF_SPEED 40
 
-#define NAVIGATION_CLOCK_DELAY 20
+#define NAVIGATION_CLOCK_DELAY 200
 #define TAKEOFF_CLOCK_DELAY 20
 
 enum NavState
@@ -77,10 +77,10 @@ private:
     PwmPin sw_pin;
     PwmPin se_pin;
 
-    MotorSpeed nw_speed;
-    MotorSpeed ne_speed;
-    MotorSpeed sw_speed;
-    MotorSpeed se_speed;
+    MotorSpeedTuner nw_speed;
+    MotorSpeedTuner ne_speed;
+    MotorSpeedTuner sw_speed;
+    MotorSpeedTuner se_speed;
 
     float pitch_offset;
     float roll_offset;

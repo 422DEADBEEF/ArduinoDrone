@@ -16,7 +16,7 @@ bool BluetoothReceiver::Update()
 {
     if (BTserial.available())
     {
-        ButtonState newState = BTserial.read();
+        state = BTserial.read();
         return true;
     }
     return false;
